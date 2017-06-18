@@ -1,0 +1,358 @@
+
+% Coded by Y.SUN for the course ESAM_448 taught by Prof.Kath
+
+%Note that sometimes the likelihood may have a local
+%maximum and the iteration can get stuck. You may want to try restarting with a new random
+%initial condition and seeing if it produces a more likely result on a subsequent iteration. Of
+%course, this intended to be merely a demonstration of the utility of Metropolis sampling and
+%not a serious code-breaking method.
+
+clf
+clear all;
+%%% Number of trials
+N=10000; 
+
+%%%use the war and peace.txt to obtain the matrix of transition probability
+
+standard_text_in=fopen('war_and_peace.txt');
+standard_text=fread(standard_text_in);
+standard_text=mapping(standard_text);
+standard_text_size=length(standard_text);
+standard_matrix=zeros(42,42); %’ ,-.0123456789;?abcdefghijklmnopqrstuvwxyz’
+for i=1:standard_text_size-1
+    standard_matrix(standard_text(i),standard_text(i+1))=standard_matrix(standard_text(i),standard_text(i+1))+1;
+end
+probability_matrix=standard_matrix./(standard_text_size-1);
+probability_matrix(probability_matrix==0)=10^(-15); %avoid zero transition probability
+probability_matrix=log(probability_matrix);
+
+
+%%% Start decoding
+
+encoded_in=fopen('encoded_message.txt');
+encoded=fread(encoded_in);
+encoded=mapping(encoded);
+encoded_size=length(encoded);
+
+%%% get the liklihood function of the decoded message
+decode_string=randperm(42);
+decoded_message=zeros(encoded_size,1);
+for i=1:encoded_size
+    decoded_message(i)=decode_string(encoded(i));
+end
+L=likelihood(decoded_message,probability_matrix,encoded_size);
+
+%%% change to new  f* by randomly flipping two characters in  f
+%and Apply metropolis algorithm 
+count=0;
+for i=1:N
+   
+   [decoded_message_new,decode_string_new]=flipping(decode_string,decoded_message);
+
+    L_new=likelihood(decoded_message_new,probability_matrix,encoded_size);
+    ratio=L_new-L;
+    
+    if rand()<=min(exp(ratio),1)
+        L=L_new;
+       
+        decoded_message=decoded_message_new;
+        count=count+1;
+    end
+end
+
+%%% final output
+fprintf(1,'\n number of iterations: %d \n',count);
+output=output(decoded_message);
+fid=fopen('result.txt','wt');
+fprintf(fid,'%s\n',output);
+
+
+function [P] = mapping(X)
+
+N=length(X);
+for i=1:N
+    if X(i)=='a'
+        P(i)=1;
+    end
+    if X(i)=='b'
+        P(i)=2;
+    end 
+    if X(i)=='c'
+        P(i)=3;
+    end
+    if X(i)=='d'
+        P(i)=4;
+    end
+    if X(i)=='e'
+        P(i)=5;
+    end
+    if X(i)=='f'
+        P(i)=6;
+    end
+     if X(i)=='g'
+        P(i)=7;
+     end
+     if X(i)=='h'
+        P(i)=8;
+     end
+     if X(i)=='i'
+        P(i)=9;
+     end
+     if X(i)=='j'
+        P(i)=10;
+     end
+     if X(i)=='k'
+        P(i)=11;
+     end
+     if X(i)=='l'
+        P(i)=12;
+     end
+     if X(i)=='m'
+        P(i)=13;
+     end
+     if X(i)=='n'
+        P(i)=14;
+     end
+     if X(i)=='o'
+        P(i)=15;
+     end
+     if X(i)=='p'
+        P(i)=16;
+     end
+     if X(i)=='q'
+        P(i)=17;
+     end
+     if X(i)=='r'
+        P(i)=18;
+     end
+     if X(i)=='s'
+        P(i)=19;
+     end
+     if X(i)=='t'
+        P(i)=20;
+     end
+     if X(i)=='u'
+        P(i)=21;
+     end
+     if X(i)=='v'
+        P(i)=22;
+     end
+     if X(i)=='w'
+        P(i)=23;
+     end
+     if X(i)=='x'
+        P(i)=24;
+     end
+     if X(i)=='y'
+        P(i)=25;
+     end
+     if X(i)=='z'
+        P(i)=26;
+     end
+     if X(i)=='.'
+        P(i)=27;
+     end
+     if X(i)==','
+        P(i)=28;
+     end
+     if X(i)==';'
+        P(i)=29;
+     end
+     if X(i)=='-'
+        P(i)=30;
+     end
+     if X(i)==' '
+        P(i)=31;
+     end
+     if X(i)=='?'
+        P(i)=32;
+     end
+    if X(i)=='0'
+        P(i)=33;
+    end
+     if X(i)=='1'
+        P(i)=34;
+     end
+     if X(i)=='2'
+        P(i)=35;
+     end
+     if X(i)=='3'
+        P(i)=36;
+     end
+     if X(i)=='4'
+        P(i)=37;
+     end
+     if X(i)=='5'
+        P(i)=38;
+     end
+     if X(i)=='6'
+        P(i)=39;
+     end
+     if X(i)=='7'
+        P(i)=40;
+     end
+     if X(i)=='8'
+        P(i)=41;
+     end
+     if X(i)=='9'
+        P(i)=42;
+     end
+end 
+    
+end
+
+function [L]=likelihood(decoded_message_new,probability_matrix,encoded_size)
+
+for i=1:encoded_size-1
+    result(i)=probability_matrix(decoded_message_new(i),decoded_message_new(i+1));
+   
+end
+
+L=sum(result);
+end
+
+function [decoded_message_new,decode_string_new]=flipping(decode_string,decoded_message)
+    
+    position=randperm(length(decode_string),2);
+    decode_string_new=decode_string;
+
+    decode_string_new(position(1))=decode_string(position(2));
+    decode_string_new(position(2))=decode_string(position(1));
+
+    for i=1:length(decoded_message)
+        decoded_message_new(i)=decode_string_new(decoded_message(i));
+    end
+end
+
+function [K]=output(X)
+N=length(X);
+for i=1:N
+    if X(i)==1
+        K(i)='a';
+    end
+    if X(i)==2
+        K(i)='b';
+    end
+    if X(i)==3
+        K(i)='c';
+    end
+    if X(i)==4
+        K(i)='d';
+    end
+    if X(i)==5
+        K(i)='e';
+    end
+    if X(i)==6
+        K(i)='f';
+    end
+    if X(i)==7
+        K(i)='g';
+    end
+    if X(i)==8
+        K(i)='h';
+    end
+    if X(i)==9
+        K(i)='i';
+     end
+    if X(i)==10
+        K(i)='j';
+    end
+    if X(i)==11
+        K(i)='k';
+    end
+     if X(i)==12
+        K(i)='l';
+     end
+     if X(i)==13
+        K(i)='m';
+     end
+     if X(i)==14
+        K(i)='n';
+     end
+     if X(i)==15
+        K(i)='o';
+     end
+     if X(i)==16
+        K(i)='p';
+     end
+     if X(i)==17
+        K(i)='q';
+     end
+     if X(i)==18
+        K(i)='r';
+     end
+     if X(i)==19
+        K(i)='s';
+     end
+     if X(i)==20
+        K(i)='t';
+     end
+     if X(i)==21
+        K(i)='u';
+     end
+     if X(i)==22
+        K(i)='v';
+     end
+     if X(i)==23
+        K(i)='w';
+     end
+      if X(i)==24
+        K(i)='x';
+      end
+     if X(i)==25
+        K(i)='y';
+     end
+     if X(i)==26
+        K(i)='z';
+     end
+     if X(i)==27
+        K(i)='.';
+     end
+     if X(i)==28
+        K(i)=',';
+     end
+     if X(i)==29
+        K(i)=';';
+     end
+     if X(i)==30
+        K(i)='-';
+     end
+     if X(i)==31
+        K(i)=' ';
+     end
+     if X(i)==32
+        K(i)='?';
+     end
+    if X(i)==33
+        K(i)='0';
+    end
+     if X(i)==34
+        K(i)='1';
+     end
+     if X(i)==35
+        K(i)='2';
+     end
+     if X(i)==36
+        K(i)='3';
+     end
+     if X(i)==37
+        K(i)='4';
+     end
+     if X(i)==38
+        K(i)='5';
+     end
+     if X(i)==39
+        K(i)='6';
+     end
+     if X(i)==40
+        K(i)='7';
+     end
+     if X(i)==41
+        K(i)='8';
+     end
+     if X(i)==42
+        K(i)='9';
+    end
+
+end
+end
